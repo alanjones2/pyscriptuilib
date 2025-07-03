@@ -2,7 +2,21 @@
 import uilib as ui
 
 # Make three figures
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
+import sys
+import io
+
+# Suppress the Matplotlib font cache build message by temporarily redirecting both stdout and stderr
+_original_stdout = sys.stdout
+_original_stderr = sys.stderr
+sys.stdout = io.StringIO()
+sys.stderr = io.StringIO()
+try:
+    import matplotlib.pyplot as plt
+finally:
+    # Restore stdout and stderr to their original states
+    sys.stdout = _original_stdout
+    sys.stderr = _original_stderr
 
 fruits = ['apple', 'blueberry', 'cherry', 'orange']
 counts = [40, 100, 30, 55]
@@ -36,7 +50,7 @@ figcontainer = ui.Container()
 
 for i, x in enumerate(cols):
     x.disp(getFig(str(i)))
-    x.button("Select fig", callback = "cb", value=str(i))
+    x.add(ui.Button("Select fig", callback = "cb", value=str(i)))
 
 # A new container with content types
 
@@ -66,19 +80,39 @@ con2 = ui.Container()
 
 def selectcb(event):
     con2.disp(event.target.value)
-con1col1.select(values=[1,2,3], labels=["one","two","three"], callback="selectcb")
+con1col1.add(ui.Select(caption="Select a number", values=[1,2,3], labels=["one","two","three"], callback="selectcb"))
 
 def checkcb(event):
     con2.disp(f"{event.target.checked} {event.target.value}")
-con1col1.check(value=1, label="Select this for 1", callback="checkcb")
-con1col1.check(value=2, label="Select this for 2", callback="checkcb")
+con1col1.add(ui.Checkbox(value=1, label="Select this for 1", callback="checkcb"))
+con1col1.add(ui.Checkbox(value=2, label="Select this for 2", callback="checkcb"))
+
+def radiocb(event):
+    con2.disp(f"Radio selected: {event.target.value}")
+con1col1.add(ui.RadioGroup(caption="Choose one letter", values=['A', 'B', 'C'], initial_value='B', callback="radiocb"))
 
 
 def get_slider_value(event):
-    con2.disp(f"{event.target.value}")
-con1col2.slider(caption="slider", min_val=0, max_val=100, initial_val=50, step=1, callback="get_slider_value")
+    con2.disp(f"{event.target.value}", append=False)
+con1col2.add(ui.Slider(caption="slider", min_val=0, max_val=100, initial_val=50, step=1, callback="get_slider_value"))
 
 def get_input_value(event):
-    con2.disp(f"{event.target.value}")
+    # This will now update in real-time on every keystroke
+    con2.disp(f"{event.target.value}", append=False)
 
-con1col2.text_input(caption="text input", initial_value="", placeholder="", callback="get_input_value")
+con1col2.add(ui.TextInput(caption="Text Input", placeholder="Type here...", callback="get_input_value"))
+
+# Set the style on the output container once to handle newlines correctly
+con2.node.style.whiteSpace = "pre-wrap"
+def get_textarea_value(event):
+    # This will now update in real-time on every keystroke
+    con2.disp(f"Text Area content:\n{event.target.value}", append=False)
+con1col2.add(ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4, callback="get_textarea_value"))
+
+page.writeHTML("---")
+page.smallbanner("Alerts")
+
+alert_container = ui.Container()
+alert_container.add(ui.Alert("This is a standard primary alert."))
+alert_container.add(ui.Alert("This is a <strong>danger</strong> alert!", category="danger"))
+alert_container.add(ui.Alert("This is a dismissible success alert. Click the 'x' to close it.", category="success", dismissible=True))

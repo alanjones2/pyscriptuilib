@@ -17,11 +17,240 @@ from pyscript import display
 import markdown as md
 
 PAGEID = "pui-id-page"
-ID = 0
-def newID():
-    global ID 
-    ID = ID + 1
-    return f"pui-id-{ID}"
+
+# Component Base Class (New)
+class Component:
+    """A base class for all UI components."""
+    def __init__(self, tag="div"):
+        self.id = f"pui-id-{id(self)}" # Use the object's unique memory id
+        self.node = document.createElement(tag)
+        self.node.setAttribute("id", self.id)
+
+    def add_to(self, parent_node):
+        """Appends the component's node to a parent DOM node."""
+        parent_node.append(self.node)
+
+    def set_class(self, class_string):
+        """Sets the CSS class attribute for the component's node."""
+        self.node.setAttribute("class", class_string)
+
+# UI Component Classes (New)
+class Button(Component):
+    """An object-oriented Button component."""
+    def __init__(self, caption="Button", callback=None, value="pressed", btnClass="btn btn-primary"):
+        super().__init__(tag="button")
+        if callback:
+            self.node.setAttribute("py-click", callback)
+        self.set_class(btnClass)
+        self.node.setAttribute("type", "button")
+        self.node.setAttribute("value", value)
+        self.node.append(document.createTextNode(caption))
+
+class Select(Component):
+    """An object-oriented Select (dropdown) component."""
+    def __init__(self, caption="", callback=None, values=[], labels=[]):
+        # The component's main node is a div wrapper for layout flexibility.
+        super().__init__(tag="div")
+        self.set_class("mb-3") # Good default styling for Bootstrap
+
+        select_id = f"{self.id}-select" # Derive sub-element ID from component ID
+        if not labels:
+            labels = values
+
+        if caption:
+            label_elem = document.createElement("label")
+            label_elem.setAttribute("for", select_id)
+            label_elem.setAttribute("class", "form-label")
+            label_elem.append(document.createTextNode(caption))
+            self.node.append(label_elem)
+
+        select_elem = document.createElement("select")
+        if callback:
+            select_elem.setAttribute("py-change", callback)
+        select_elem.setAttribute("class", "form-select")
+        select_elem.setAttribute("id", select_id)
+
+        for l, v in zip(labels, values):
+            option_elem = document.createElement("option")
+            option_elem.setAttribute("value", str(v))
+            option_elem.append(document.createTextNode(str(l)))
+            select_elem.append(option_elem)
+
+        self.node.append(select_elem)
+
+class TextInput(Component):
+    """An object-oriented Text Input component."""
+    def __init__(self, caption="", initial_value="", placeholder="", callback=None):
+        super().__init__(tag="div")
+        self.set_class("mb-3") # Bootstrap margin-bottom
+
+        input_id = f"{self.id}-input"
+
+        if caption:
+            label_elem = document.createElement("label")
+            label_elem.setAttribute("for", input_id)
+            label_elem.setAttribute("class", "form-label")
+            label_elem.append(document.createTextNode(caption))
+            self.node.append(label_elem)
+
+        input_elem = document.createElement("input")
+        input_elem.setAttribute("type", "text")
+        input_elem.setAttribute("class", "form-control")
+        input_elem.setAttribute("id", input_id)
+        input_elem.setAttribute("value", initial_value)
+        if placeholder: input_elem.setAttribute("placeholder", placeholder)
+        if callback: input_elem.setAttribute("py-input", callback)
+        self.node.append(input_elem)
+
+class TextArea(Component):
+    """An object-oriented TextArea component for multi-line text input."""
+    def __init__(self, caption="", initial_value="", placeholder="", rows=3, callback=None):
+        # Use a div wrapper for the label and textarea
+        super().__init__(tag="div")
+        self.set_class("mb-3") # Bootstrap margin-bottom
+
+        textarea_id = f"{self.id}-textarea"
+
+        if caption:
+            label_elem = document.createElement("label")
+            label_elem.setAttribute("for", textarea_id)
+            label_elem.setAttribute("class", "form-label")
+            label_elem.append(document.createTextNode(caption))
+            self.node.append(label_elem)
+
+        textarea_elem = document.createElement("textarea")
+        textarea_elem.setAttribute("class", "form-control")
+        textarea_elem.setAttribute("id", textarea_id)
+        textarea_elem.setAttribute("rows", str(rows))
+        if placeholder:
+            textarea_elem.setAttribute("placeholder", placeholder)
+        if callback:
+            textarea_elem.setAttribute("py-input", callback)
+        textarea_elem.append(document.createTextNode(initial_value))
+        self.node.append(textarea_elem)
+
+class Checkbox(Component):
+    """An object-oriented Checkbox component."""
+    def __init__(self, label="", callback=None, value=None):
+        # The main node is a div wrapper for Bootstrap styling.
+        super().__init__(tag="div")
+        self.set_class("form-check")
+
+        checkbox_id = f"{self.id}-checkbox"
+
+        input_elem = document.createElement("input")
+        input_elem.setAttribute("class", "form-check-input")
+        input_elem.setAttribute("type", "checkbox")
+        if value is not None:
+            input_elem.setAttribute("value", str(value))
+        input_elem.setAttribute("id", checkbox_id)
+        if callback:
+            input_elem.setAttribute("py-change", callback)
+
+        label_elem = document.createElement("label")
+        label_elem.setAttribute("class", "form-check-label")
+        label_elem.setAttribute("for", checkbox_id)
+        label_elem.append(document.createTextNode(label))
+
+        self.node.append(input_elem)
+        self.node.append(label_elem)
+
+class Slider(Component):
+    """An object-oriented Slider (range input) component."""
+    def __init__(self, caption="", min_val=0, max_val=100, initial_val=None, step=1, callback=None):
+        super().__init__(tag="div")
+        self.set_class("mb-3")
+
+        slider_id = f"{self.id}-slider"
+
+        if caption:
+            label_elem = document.createElement("label")
+            label_elem.setAttribute("for", slider_id)
+            label_elem.setAttribute("class", "form-label")
+            label_elem.append(document.createTextNode(caption))
+            self.node.append(label_elem)
+
+        slider_elem = document.createElement("input")
+        slider_elem.setAttribute("type", "range")
+        slider_elem.setAttribute("class", "form-range")
+        slider_elem.setAttribute("id", slider_id)
+        slider_elem.setAttribute("min", str(min_val))
+        slider_elem.setAttribute("max", str(max_val))
+        slider_elem.setAttribute("step", str(step))
+        slider_elem.setAttribute("value", str(initial_val if initial_val is not None else min_val))
+        if callback: slider_elem.setAttribute("py-change", callback)
+        self.node.append(slider_elem)
+
+class RadioGroup(Component):
+    """An object-oriented Radio Button Group component."""
+    def __init__(self, caption="", callback=None, values=[], labels=[], initial_value=None):
+        # The main node is a fieldset for semantic grouping of radio buttons.
+        super().__init__(tag="fieldset")
+        self.set_class("mb-3")
+
+        # The 'name' attribute must be shared by all radio buttons in the group.
+        group_name = f"{self.id}-radiogroup"
+
+        if caption:
+            legend_elem = document.createElement("legend")
+            legend_elem.setAttribute("class", "col-form-label pt-0")
+            legend_elem.append(document.createTextNode(caption))
+            self.node.append(legend_elem)
+
+        if not labels:
+            labels = values
+
+        for l, v in zip(labels, values):
+            wrapper_div = document.createElement("div")
+            wrapper_div.setAttribute("class", "form-check")
+
+            radio_id = f"{self.id}-radio-{v}"
+            input_elem = document.createElement("input")
+            input_elem.setAttribute("class", "form-check-input")
+            input_elem.setAttribute("type", "radio")
+            input_elem.setAttribute("name", group_name)
+            input_elem.setAttribute("id", radio_id)
+            input_elem.setAttribute("value", str(v))
+            if str(v) == str(initial_value):
+                input_elem.setAttribute("checked", True)
+            if callback:
+                input_elem.setAttribute("py-change", callback)
+
+            label_elem = document.createElement("label")
+            label_elem.setAttribute("class", "form-check-label")
+            label_elem.setAttribute("for", radio_id)
+            label_elem.append(document.createTextNode(str(l)))
+
+            wrapper_div.append(input_elem)
+            wrapper_div.append(label_elem)
+            self.node.append(wrapper_div)
+
+class Alert(Component):
+    """An object-oriented Alert component for displaying contextual messages."""
+    def __init__(self, text="", category="primary", dismissible=False):
+        # The main node is a div with alert roles.
+        super().__init__(tag="div")
+
+        class_list = f"alert alert-{category}"
+        if dismissible:
+            class_list += " alert-dismissible fade show"
+
+        self.set_class(class_list)
+        self.node.setAttribute("role", "alert")
+
+        # Use a temporary node to parse potential markdown/html in the text
+        content_node = document.createElement("span")
+        content_node.innerHTML = md.markdown(text)
+        for child in list(content_node.childNodes):
+            self.node.append(child)
+
+        if dismissible:
+            button = document.createElement("button")
+            button.setAttribute("type", "button")
+            button.setAttribute("class", "btn-close")
+            button.setAttribute("data-bs-dismiss", "alert")
+            button.setAttribute("aria-label", "Close")
+            self.node.append(button)
 
 # Containers
 
@@ -30,7 +259,7 @@ class Container:
     id = ""
     classAttributes = False
     def __init__(self, parent=PAGEID, classAttributes=False):
-        self.id = newID()
+        self.id = f"pui-id-{id(self)}"
         self.node = document.createElement("div")
         self.node.setAttribute("class", "container")
         self.node.setAttribute("id", self.id)
@@ -51,6 +280,11 @@ class Container:
             cols.append(Container(parent=row.id))
             cols[i].node.setAttribute("class","col") 
         return cols
+
+    def add(self, component):
+        """Adds a component object to this container."""
+        component.add_to(self.node)
+        return self # Return self to allow for method chaining
     
     # Content functions 
 
@@ -60,11 +294,19 @@ class Container:
         self.disp(text, append)
     def writeHTML(self, text, append = True):
         if append:
-            self.node.innerHTML = self.node.innerHTML + md.markdown(text)
+            # To avoid destroying existing elements (like plots or elements with listeners),
+            # we create a temporary container, add the new HTML to it, and then
+            # append its children to the actual node. This is non-destructive.
+            temp_container = document.createElement("div")
+            temp_container.innerHTML = md.markdown(text)
+            # Use list() to create a static copy of childNodes, as it's a live NodeList
+            for child in list(temp_container.childNodes):
+                self.node.append(child)
         else:
+            # This is destructive, which is the intended behavior for append=False
             self.node.innerHTML = md.markdown(text)
     def headertag(self,text,level):
-        self.writeHTML(md.markdown(f"<h{level}>{text}</h>"))         
+        self.writeHTML(f"<h{level}>{text}</h{level}>")
     def title(self, text): self.headertag(text,1)
     def header(self, text): self.headertag(text,2)
     def subheader(self, text): self.headertag(text,3)
@@ -82,148 +324,34 @@ class Container:
         titleField.disp(text)
 
     # controls
-    def button(self,caption="Button", callback=None, value="pressed", btnClass="btn btn-primary"):
-        b = document.createElement("button")
-        if callback: b.setAttribute("py-click",callback)
-        b.setAttribute("class", btnClass)
-        b.setAttribute("type","button")
-        b.setAttribute("value",value)
-        b.append(document.createTextNode(caption))
-        self.node.append(b)
-
-    def select(self,caption="", callback=None, values=[], labels=[]):
-        select_id = newID() # Generate a unique ID for the select element
-        if len(labels)==0: labels=values
-
-        if caption:
-            label_elem = document.createElement("label")
-            label_elem.setAttribute("for", select_id)
-            label_elem.append(document.createTextNode(caption))
-            self.node.append(label_elem)
-
-        s = document.createElement("select")
-        if callback: s.setAttribute("py-change",callback)
-        s.setAttribute("class", "form-select")
-        s.setAttribute("id", select_id) # Set the ID for association with label
-
-        for l, v in zip(labels, values):
-            o = document.createElement("option")
-            o.setAttribute("value",v)
-            o.append(document.createTextNode(l))
-            s.append(o)
-        self.node.append(s)
-
-    def check(self, caption="", callback=None, value=None, label=None): # 'label' here is the text for the checkbox
-        checkbox_id = newID() # Generate a unique ID for the checkbox input
-        s = document.createElement("div")
-        s.setAttribute("class", "form-check")
-        o = document.createElement("input")
-        o.setAttribute("class", "form-check-input")
-        o.setAttribute("type", "checkbox")
-        o.setAttribute("value",value)
-        o.setAttribute("id", checkbox_id) # Set the ID for association with label
-        if callback: o.setAttribute("py-change",callback) # py-change should be on the input
-        l = document.createElement("label")
-        l.setAttribute("class", "form-check-label") # Bootstrap class for labels
-        l.setAttribute("for", checkbox_id) # Associate label with input
-        l.append(document.createTextNode(label if label else caption)) # Use 'label' text if provided, else 'caption'
-        s.append(o)
-        s.append(l)
-        self.node.append(s)
-
-    def text_input(self, caption="", initial_value="", placeholder="", callback=None):
-        input_id = newID()
-
-        # Create a div for the form group (optional, but good for styling)
-        form_group_div = document.createElement("div")
-        form_group_div.setAttribute("class", "mb-3") # Bootstrap margin-bottom
-
-        # Create label
-        if caption:
-            label_elem = document.createElement("label")
-            label_elem.setAttribute("for", input_id)
-            label_elem.setAttribute("class", "form-label")
-            label_elem.append(document.createTextNode(caption))
-            form_group_div.append(label_elem)
-
-        # Create input element
-        input_elem = document.createElement("input")
-        input_elem.setAttribute("type", "text")
-        input_elem.setAttribute("class", "form-control")
-        input_elem.setAttribute("id", input_id)
-        input_elem.setAttribute("value", initial_value)
-        if placeholder:
-            input_elem.setAttribute("placeholder", placeholder)
-
-        if callback:  
-            #input_elem.setAttribute("py-enter", callback)
-            # input_elem.setAttribute("onkeydown", f"if(event.key === 'Enter') {{ {callback}(event); }}")
-            input_elem.setAttribute("py-change", callback)
-            #input_elem.setAttribute("py-input", callback) # Use py-input for real-time updates
-
-        form_group_div.append(input_elem)
-        self.node.append(form_group_div)
-
-    def slider(self, caption="", min_val=0, max_val=100, initial_val=None, step=1, callback=None):
-        slider_id = newID()
-        #output_id = newID() # ID for the element displaying the current value
-
-        # Create a div for the form group
-        form_group_div = document.createElement("div")
-        form_group_div.setAttribute("class", "mb-3")
-
-        # Create label
-        label_elem = document.createElement("label")
-        label_elem.setAttribute("for", slider_id)
-        label_elem.setAttribute("class", "form-label")
-        label_elem.append(document.createTextNode(caption))
-        form_group_div.append(label_elem)
-
-        # Create slider input
-        slider_elem = document.createElement("input")
-        slider_elem.setAttribute("type", "range")
-        slider_elem.setAttribute("class", "form-range")
-        slider_elem.setAttribute("id", slider_id)
-        slider_elem.setAttribute("min", str(min_val))
-        slider_elem.setAttribute("max", str(max_val))
-        slider_elem.setAttribute("step", str(step))
-        slider_elem.setAttribute("value", str(initial_val if initial_val is not None else min_val))
-        if callback: slider_elem.setAttribute("py-change", callback) # Use py-input for real-time updates
-        form_group_div.append(slider_elem)
-
-        # Create an output element to display the current value
-        #output_elem = document.createElement("output")
-        #output_elem.setAttribute("for", slider_id) # Link to the slider
-        #output_elem.setAttribute("id", output_id)
-        #output_elem.append(document.createTextNode(str(initial_val if initial_val is not None else min_val)))
-        #form_group_div.append(output_elem)
-
-        self.node.append(form_group_div)
-
-        # Return the output element's ID so the callback can update it
-        #return output_id
                                             
 
 class Page(Container):
     def __init__(self, titletext="", width="narrow"):
-        self.id = PAGEID
-        self.node = document.createElement("div")
-        if width == "narrow":
-            self.node.setAttribute("class", "container")
-        self.node.setAttribute("id", self.id)
+        # Page is a singleton container. Check if it already exists.
+        page_node = document.getElementById(PAGEID)
 
-        bodyNode = document.getElementsByTagName("body")[0]
-        bodyNode.append(self.node)
+        if page_node:
+            # If it exists, just adopt the existing node.
+            self.node = page_node
+            self.id = PAGEID
+        else:
+            # If it doesn't exist, we can't use super().__init__() because
+            # it appends to a parent. Page appends to the body.
+            # We manually do the setup.
+            self.id = PAGEID
+            self.node = document.createElement("div")
+            self.node.setAttribute("id", self.id)
+            if width == "narrow":
+                self.node.setAttribute("class", "container")
+            # Append to the body, which is the special behavior of Page.
+            bodyNode = document.getElementsByTagName("body")[0]
+            bodyNode.append(self.node)
 
-        titletag = document.createElement("title")
-        titletag.innerHTML = titletext
+        # Set the document title. This is safe to run multiple times.
         headNode = document.getElementsByTagName("head")[0]
-        headNode.append(titletag)
-
-
-
-
-
-
-
-    
+        titletag = headNode.querySelector("title")
+        if not titletag:
+            titletag = document.createElement("title")
+            headNode.append(titletag)
+        titletag.innerHTML = titletext
