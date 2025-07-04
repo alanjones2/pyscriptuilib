@@ -1,43 +1,70 @@
-# Towards a UI library for PyScript
+# uilib.py - A Pythonic UI library for PyScript
+#
+# This library provides a set of classes to build user interfaces
+# in a more structured and object-oriented way than direct DOM manipulation.
+# It is designed to work with Bootstrap 5 for styling.
+#
+# ---
+#
+# MIT License
+#
+# Copyright (c) 2025 Alan Jones
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT- LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
-"""NOTES to self: Containers, controls and content
-the main page is a special container that attaches itself to the <body> tag
-thus can inherit from the generic container
-other containers like columns will be child containers too
-
-Content like strings, headings or graphs can inherit from a generic content class 
-Strings should probably implement markdown by default, and thus html, too
-
-Let's automatically set the id and forget passing it. Create an id object that increments and id string
-"""
 
 
 from pyscript import document
 from pyscript import display
+from typing import Any, Callable, List, Optional
 import markdown as md
 
+# The static ID for the main page container, used as the default parent for other containers.
 PAGEID = "pui-id-page"
 
 # Component Base Class (New)
 class Component:
-    """A base class for all UI components."""
-    def __init__(self, tag="div"):
+    """A base class for all UI components, providing common functionality."""
+    def __init__(self, tag: str = "div"):
         self.id = f"pui-id-{id(self)}" # Use the object's unique memory id
         self.node = document.createElement(tag)
         self.node.setAttribute("id", self.id)
 
-    def add_to(self, parent_node):
+    def add_to(self, parent_node: Any) -> None:
         """Appends the component's node to a parent DOM node."""
         parent_node.append(self.node)
 
-    def set_class(self, class_string):
+    def set_class(self, class_string: str) -> None:
         """Sets the CSS class attribute for the component's node."""
         self.node.setAttribute("class", class_string)
 
 # UI Component Classes (New)
 class Button(Component):
-    """An object-oriented Button component."""
-    def __init__(self, caption="Button", callback=None, value="pressed", btnClass="btn btn-primary"):
+    """Creates an interactive button element."""
+    def __init__(self, caption: str = "Button", callback: Optional[Callable] = None, value: str = "pressed", btnClass: str = "btn btn-primary"):
+        """
+        Args:
+            caption (str, optional): The text displayed on the button. Defaults to "Button".
+            callback (Callable, optional): The Python function to call when the button is clicked. Defaults to None.
+            value (str, optional): The value attribute of the button. Defaults to "pressed".
+            btnClass (str, optional): The CSS class(es) for styling. Defaults to "btn btn-primary".
+        """
         super().__init__(tag="button")
         if callback:
             self.node.setAttribute("py-click", callback)
@@ -47,9 +74,15 @@ class Button(Component):
         self.node.append(document.createTextNode(caption))
 
 class Select(Component):
-    """An object-oriented Select (dropdown) component."""
-    def __init__(self, caption="", callback=None, values=[], labels=[]):
-        # The component's main node is a div wrapper for layout flexibility.
+    """Creates a dropdown selection menu."""
+    def __init__(self, caption: str = "", callback: Optional[Callable] = None, values: List[Any] = [], labels: List[str] = []):
+        """
+        Args:
+            caption (str, optional): A label displayed above the select menu. Defaults to "".
+            callback (Callable, optional): The Python function to call when the selection changes. Defaults to None.
+            values (List[Any], optional): The list of values for the options. Defaults to [].
+            labels (List[str], optional): The list of display labels for the options. If empty, `values` will be used. Defaults to [].
+        """
         super().__init__(tag="div")
         self.set_class("mb-3") # Good default styling for Bootstrap
 
@@ -79,8 +112,15 @@ class Select(Component):
         self.node.append(select_elem)
 
 class TextInput(Component):
-    """An object-oriented Text Input component."""
-    def __init__(self, caption="", initial_value="", placeholder="", callback=None):
+    """Creates a single-line text input field."""
+    def __init__(self, caption: str = "", initial_value: str = "", placeholder: str = "", callback: Optional[Callable] = None):
+        """
+        Args:
+            caption (str, optional): A label displayed above the input field. Defaults to "".
+            initial_value (str, optional): The starting value in the input field. Defaults to "".
+            placeholder (str, optional): Placeholder text to display when the field is empty. Defaults to "".
+            callback (Callable, optional): The Python function to call on each keystroke (`input` event). Defaults to None.
+        """
         super().__init__(tag="div")
         self.set_class("mb-3") # Bootstrap margin-bottom
 
@@ -103,9 +143,16 @@ class TextInput(Component):
         self.node.append(input_elem)
 
 class TextArea(Component):
-    """An object-oriented TextArea component for multi-line text input."""
-    def __init__(self, caption="", initial_value="", placeholder="", rows=3, callback=None):
-        # Use a div wrapper for the label and textarea
+    """Creates a multi-line text input area."""
+    def __init__(self, caption: str = "", initial_value: str = "", placeholder: str = "", rows: int = 3, callback: Optional[Callable] = None):
+        """
+        Args:
+            caption (str, optional): A label displayed above the text area. Defaults to "".
+            initial_value (str, optional): The starting text in the area. Defaults to "".
+            placeholder (str, optional): Placeholder text to display when the area is empty. Defaults to "".
+            rows (int, optional): The visible number of lines in the text area. Defaults to 3.
+            callback (Callable, optional): The Python function to call on each keystroke (`input` event). Defaults to None.
+        """
         super().__init__(tag="div")
         self.set_class("mb-3") # Bootstrap margin-bottom
 
@@ -130,9 +177,14 @@ class TextArea(Component):
         self.node.append(textarea_elem)
 
 class Checkbox(Component):
-    """An object-oriented Checkbox component."""
-    def __init__(self, label="", callback=None, value=None):
-        # The main node is a div wrapper for Bootstrap styling.
+    """Creates a checkbox input with a label."""
+    def __init__(self, label: str = "", callback: Optional[Callable] = None, value: Optional[Any] = None):
+        """
+        Args:
+            label (str, optional): The text label displayed next to the checkbox. Defaults to "".
+            callback (Callable, optional): The Python function to call when the checkbox state changes. Defaults to None.
+            value (Any, optional): The value associated with the checkbox, accessible in the event. Defaults to None.
+        """
         super().__init__(tag="div")
         self.set_class("form-check")
 
@@ -156,8 +208,17 @@ class Checkbox(Component):
         self.node.append(label_elem)
 
 class Slider(Component):
-    """An object-oriented Slider (range input) component."""
-    def __init__(self, caption="", min_val=0, max_val=100, initial_val=None, step=1, callback=None):
+    """Creates a slider (range input) control."""
+    def __init__(self, caption: str = "", min_val: int = 0, max_val: int = 100, initial_val: Optional[int] = None, step: int = 1, callback: Optional[Callable] = None):
+        """
+        Args:
+            caption (str, optional): A label displayed above the slider. Defaults to "".
+            min_val (int, optional): The minimum value of the slider. Defaults to 0.
+            max_val (int, optional): The maximum value of the slider. Defaults to 100.
+            initial_val (Optional[int], optional): The starting value of the slider. Defaults to `min_val`.
+            step (int, optional): The increment step of the slider. Defaults to 1.
+            callback (Callable, optional): The Python function to call when the slider value changes. Defaults to None.
+        """
         super().__init__(tag="div")
         self.set_class("mb-3")
 
@@ -182,9 +243,16 @@ class Slider(Component):
         self.node.append(slider_elem)
 
 class RadioGroup(Component):
-    """An object-oriented Radio Button Group component."""
-    def __init__(self, caption="", callback=None, values=[], labels=[], initial_value=None):
-        # The main node is a fieldset for semantic grouping of radio buttons.
+    """Creates a group of radio buttons where only one can be selected."""
+    def __init__(self, caption: str = "", callback: Optional[Callable] = None, values: List[Any] = [], labels: List[str] = [], initial_value: Optional[Any] = None):
+        """
+        Args:
+            caption (str, optional): A label for the entire radio group. Defaults to "".
+            callback (Callable, optional): The Python function to call when the selection changes. Defaults to None.
+            values (List[Any], optional): The list of values for the radio options. Defaults to [].
+            labels (List[str], optional): The list of display labels for the options. If empty, `values` will be used. Defaults to [].
+            initial_value (Optional[Any], optional): The value of the radio button to be selected initially. Defaults to None.
+        """
         super().__init__(tag="fieldset")
         self.set_class("mb-3")
 
@@ -226,9 +294,14 @@ class RadioGroup(Component):
             self.node.append(wrapper_div)
 
 class Alert(Component):
-    """An object-oriented Alert component for displaying contextual messages."""
-    def __init__(self, text="", category="primary", dismissible=False):
-        # The main node is a div with alert roles.
+    """Creates a contextual feedback message box."""
+    def __init__(self, text: str = "", category: str = "primary", dismissible: bool = False):
+        """
+        Args:
+            text (str, optional): The message to display in the alert. Can contain markdown/HTML. Defaults to "".
+            category (str, optional): The alert category, controlling the color (e.g., 'primary', 'success', 'danger'). Defaults to "primary".
+            dismissible (bool, optional): If True, adds a close button to the alert. Defaults to False.
+        """
         super().__init__(tag="div")
 
         class_list = f"alert alert-{category}"
@@ -253,8 +326,13 @@ class Alert(Component):
             self.node.append(button)
 
 class Banner(Component):
-    """An object-oriented Banner component."""
-    def __init__(self, title="", subtitle=""):
+    """Creates a large, prominent banner with a title and subtitle."""
+    def __init__(self, title: str = "", subtitle: str = ""):
+        """
+        Args:
+            title (str, optional): The main text of the banner. Defaults to "".
+            subtitle (str, optional): The smaller text below the main title. Defaults to "".
+        """
         super().__init__(tag="div")
         self.set_class("bg-primary text-center text-white p-2 my-2")
 
@@ -270,8 +348,12 @@ class Banner(Component):
             self.node.append(subtitle_elem)
 
 class SmallBanner(Component):
-    """An object-oriented SmallBanner component."""
-    def __init__(self, text=""):
+    """Creates a smaller, more compact banner."""
+    def __init__(self, text: str = ""):
+        """
+        Args:
+            text (str, optional): The text to display in the banner. Defaults to "".
+        """
         super().__init__(tag="div")
         self.set_class("bg-primary text-center text-white p-2 my-1")
 
@@ -285,13 +367,13 @@ class SmallBanner(Component):
 # Containers
 
 class Container:
-    def __init__(self, parent=PAGEID, class_name=None):
+    """A generic container component that acts as a <div> element."""
+    def __init__(self, parent: str = PAGEID, class_name: Optional[str] = None):
         """
         Initializes a generic container (a <div> element).
 
         Args:
-            parent (str, optional): The ID of the parent element to append this container to.
-                                    Defaults to the main page container.
+            parent (str, optional): The ID of the parent element to append this container to. Defaults to the main page container.
             class_name (str, optional): The CSS class(es) to apply to the container. Defaults to None.
         """
         self.id = f"pui-id-{id(self)}"
@@ -305,18 +387,21 @@ class Container:
         parentNode.append(self.node)
 
 
-    def add(self, component):
-        """Adds a component object to this container."""
+    def add(self, component: 'Component') -> 'Container':
+        """Adds a component object to this container and returns self for chaining."""
         component.add_to(self.node)
         return self # Return self to allow for method chaining
     
     # Content functions 
 
-    def disp(self, content, append=True):
+    def disp(self, content: Any, append: bool = True) -> None:
+        """Displays content within this container using pyscript.display."""
         display(content, target=self.id, append=append)
-    def write(self, text, append = True):
+    def write(self, text: str, append: bool = True) -> None:
+        """Writes plain text to this container."""
         self.disp(text, append)
-    def writeHTML(self, text, append = True):
+    def writeHTML(self, text: str, append: bool = True) -> None:
+        """Writes a string of markdown/HTML to this container."""
         if append:
             # To avoid destroying existing elements (like plots or elements with listeners),
             # we create a temporary container, add the new HTML to it, and then
@@ -329,29 +414,46 @@ class Container:
         else:
             # This is destructive, which is the intended behavior for append=False
             self.node.innerHTML = md.markdown(text)
-    def headertag(self,text,level):
+    def headertag(self, text: str, level: int) -> None:
+        """Creates a header tag of a specific level (1-6)."""
         self.writeHTML(f"<h{level}>{text}</h{level}>")
-    def title(self, text): self.headertag(text,1)
-    def header(self, text): self.headertag(text,2)
-    def subheader(self, text): self.headertag(text,3)
+    def title(self, text: str) -> None:
+        """Creates a main title (<h1>)."""
+        self.headertag(text,1)
+    def header(self, text: str) -> None:
+        """Creates a secondary header (<h2>)."""
+        self.headertag(text,2)
+    def subheader(self, text: str) -> None:
+        """Creates a subheader (<h3>)."""
+        self.headertag(text,3)
 
                                             
 class Row(Container):
-    """
-    A specialized container that represents a Bootstrap row.
-    It automatically creates a specified number of column containers within it.
-    """
-    def __init__(self, parent=PAGEID, num_cols=1):
-        # A Row is a container with the "row" class.
+    """A specialized container that represents a Bootstrap row, holding columns."""
+    def __init__(self, parent: str = PAGEID, num_cols: int = 1):
+        """
+        Args:
+            parent (str, optional): The ID of the parent element. Defaults to the main page container.
+            num_cols (int, optional): The number of columns to create within this row. Defaults to 1.
+        """
         super().__init__(parent=parent, class_name="row")
-        self.columns = []
+        self.columns: List['Container'] = []
         for _ in range(num_cols):
             # A Column is a simple container with the "col" class, and its parent is this row.
             col = Container(parent=self.id, class_name="col")
             self.columns.append(col)
 
 class Page(Container):
-    def __init__(self, titletext="", width="narrow"):
+    """A special singleton container that represents the main page content area."""
+    def __init__(self, titletext: str = "", width: str = "narrow"):
+        """
+        Initializes the main page container. This class is a singleton; subsequent
+        calls will adopt the existing page element.
+
+        Args:
+            titletext (str, optional): The text to set as the document's <title>. Defaults to "".
+            width (str, optional): If "narrow", applies the Bootstrap 'container' class for a centered, max-width layout. Defaults to "narrow".
+        """
         # Page is a singleton container. Check if it already exists.
         page_node = document.getElementById(PAGEID)
 
