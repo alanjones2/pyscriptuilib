@@ -1,8 +1,7 @@
-#from uilib import *
 import uilib as ui
 
-# Make three figures
-#import matplotlib.pyplot as plt
+# The following code suppresses warnings from matplotlib.
+# they are an unnecessary distraction for the user and anyway can be seen in the browser console 
 import sys
 import io
 
@@ -17,6 +16,10 @@ finally:
     # Restore stdout and stderr to their original states
     sys.stdout = _original_stdout
     sys.stderr = _original_stderr
+# end of warning suppression code
+
+
+# Make three figures
 
 fruits = ['apple', 'blueberry', 'cherry', 'orange']
 counts = [40, 100, 30, 55]
@@ -33,14 +36,17 @@ def getBigFig(i):
     return getFig(i,width=10, height=4)
 #######################################
 
+
 # Create page - you have to create a page
 page = ui.Page(titletext="Kitchen sink")
 
-# banner is a convenience function
-page.banner("Choose a graph","Select a graph and it will be drawn bigger, below")
 
-# makeCols returns a list of col containers inside a row container
-cols = page.makeCols(3)
+# banner is a convenience function
+page.add(ui.Banner("Choose a graph","Select a graph and it will be drawn bigger, below"))
+
+# Create a row with 3 columns and get the list of column containers
+row1 = ui.Row(parent=page.id, num_cols=3)
+cols = row1.columns
 
 # button callback - the value of the button is the index of the fig
 def cb(event):
@@ -56,9 +62,28 @@ for i, x in enumerate(cols):
 
 page.writeHTML("---")
 
-page.smallbanner("Content types")
+page.add(ui.SmallBanner("Content types"))
 
-c1, c2, c3 = page.makeCols(3)
+#page.header("Content types")
+
+
+my_new_container = ui.Container(parent=page.id)
+
+row2 = ui.Row(parent=my_new_container.id, num_cols=2)
+my_new_cols = row2.columns
+my_new_col_1 = my_new_cols[0]
+my_new_col_2 = my_new_cols[1]
+my_new_col_1.header("Left column")
+my_new_col_2.header("Right column")
+
+
+con0 = ui.Container()
+row3 = ui.Row(parent=con0.id, num_cols=3)
+cols1 = row3.columns
+c1 = cols1[0]
+c2 = cols1[1]
+c3 = cols1[2]
+
 
 c1.title("This is a Title")
 c1.header("This is a Header")
@@ -75,7 +100,8 @@ c3.write("Write some plain text")
 c3.writeHTML("Write text with *markdown text* and <b>HTML text</b>")
 
 con1 = ui.Container()
-con1col1, con1col2 = con1.makeCols(2)
+row4 = ui.Row(parent=con1.id, num_cols=2)
+con1col1, con1col2 = row4.columns
 con2 = ui.Container()
 
 def selectcb(event):
@@ -110,7 +136,7 @@ def get_textarea_value(event):
 con1col2.add(ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4, callback="get_textarea_value"))
 
 page.writeHTML("---")
-page.smallbanner("Alerts")
+page.add(ui.SmallBanner("Alerts"))
 
 alert_container = ui.Container()
 alert_container.add(ui.Alert("This is a standard primary alert."))

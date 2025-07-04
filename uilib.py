@@ -252,34 +252,58 @@ class Alert(Component):
             button.setAttribute("aria-label", "Close")
             self.node.append(button)
 
+class Banner(Component):
+    """An object-oriented Banner component."""
+    def __init__(self, title="", subtitle=""):
+        super().__init__(tag="div")
+        self.set_class("bg-primary text-center text-white p-2 my-2")
+
+        title_elem = document.createElement("div")
+        title_elem.setAttribute("class", "display-3")
+        title_elem.append(document.createTextNode(title))
+        self.node.append(title_elem)
+
+        if subtitle:
+            subtitle_elem = document.createElement("div")
+            subtitle_elem.setAttribute("class", "lead")
+            subtitle_elem.append(document.createTextNode(subtitle))
+            self.node.append(subtitle_elem)
+
+class SmallBanner(Component):
+    """An object-oriented SmallBanner component."""
+    def __init__(self, text=""):
+        super().__init__(tag="div")
+        self.set_class("bg-primary text-center text-white p-2 my-1")
+
+        title_elem = document.createElement("div")
+        title_elem.setAttribute("class", "display-4")
+        title_elem.append(document.createTextNode(text))
+        self.node.append(title_elem)
+
+
+
 # Containers
 
 class Container:
-    node = None
-    id = ""
-    classAttributes = False
-    def __init__(self, parent=PAGEID, classAttributes=False):
+    def __init__(self, parent=PAGEID, class_name=None):
+        """
+        Initializes a generic container (a <div> element).
+
+        Args:
+            parent (str, optional): The ID of the parent element to append this container to.
+                                    Defaults to the main page container.
+            class_name (str, optional): The CSS class(es) to apply to the container. Defaults to None.
+        """
         self.id = f"pui-id-{id(self)}"
         self.node = document.createElement("div")
-        self.node.setAttribute("class", "container")
         self.node.setAttribute("id", self.id)
-        if classAttributes: self.setClassAttributes(classAttributes)
+        self.class_name = class_name
+        if self.class_name:
+            self.node.setAttribute("class", self.class_name)
+
         parentNode = document.getElementById(parent)
         parentNode.append(self.node)
 
-    def setClassAttributes(self, classAttributes):
-        self.classAttributes = classAttributes
-        self.node.setAttribute("class", classAttributes)
-
-    # Column functions
-    def makeCols(self,number):
-        # create a row of columns and display the figures in the columns
-        row = Container(classAttributes="row")
-        cols=[]
-        for i in range(0,number):
-            cols.append(Container(parent=row.id))
-            cols[i].node.setAttribute("class","col") 
-        return cols
 
     def add(self, component):
         """Adds a component object to this container."""
@@ -311,20 +335,20 @@ class Container:
     def header(self, text): self.headertag(text,2)
     def subheader(self, text): self.headertag(text,3)
 
-    def banner(self, title="", subtitle=""):
-        headerField = Container(parent=self.id, classAttributes="bg-primary text-center text-white p-2 my-2")
-        titleField = Container(parent=headerField.id, classAttributes="display-3")
-        titleField.disp(title)
-        subtitleField = Container(parent=headerField.id, classAttributes="lead")
-        subtitleField.disp(subtitle)
-
-    def smallbanner(self, text=""):
-        headerField = Container(parent=self.id, classAttributes="bg-primary text-center text-white p-2 my-1")
-        titleField = Container(parent=headerField.id, classAttributes="display-4")
-        titleField.disp(text)
-
-    # controls
                                             
+class Row(Container):
+    """
+    A specialized container that represents a Bootstrap row.
+    It automatically creates a specified number of column containers within it.
+    """
+    def __init__(self, parent=PAGEID, num_cols=1):
+        # A Row is a container with the "row" class.
+        super().__init__(parent=parent, class_name="row")
+        self.columns = []
+        for _ in range(num_cols):
+            # A Column is a simple container with the "col" class, and its parent is this row.
+            col = Container(parent=self.id, class_name="col")
+            self.columns.append(col)
 
 class Page(Container):
     def __init__(self, titletext="", width="narrow"):
