@@ -32,11 +32,15 @@
 
 from pyscript import document
 from pyscript import display
+from pyodide.ffi import create_proxy
 from typing import Any, Callable, List, Optional, Union
 import markdown as md
 
 # The static ID for the main page container, used as the default parent for other containers.
 PAGEID = "pui-id-page"
+# This registry is crucial to prevent Python from garbage-collecting component
+# objects that are only referenced by JavaScript event listeners.
+_component_registry = {}
 
 # Component Base Class (New)
 class Component:
@@ -45,6 +49,7 @@ class Component:
         self.id = f"pui-id-{id(self)}" # Use the object's unique memory id
         self.node = document.createElement(tag)
         self.node.setAttribute("id", self.id)
+        _component_registry[self.id] = self # Prevent garbage collection
 
     def add_to(self, parent_node: Any) -> None:
         """Appends the component's node to a parent DOM node."""
@@ -53,6 +58,15 @@ class Component:
     def set_class(self, class_string: str) -> None:
         """Sets the CSS class attribute for the component's node."""
         self.node.setAttribute("class", class_string)
+
+    def _proxy_event_handler(self, callback: Callable) -> Callable:
+        """Creates a proxy to a Python callback that receives the component instance."""
+        def wrapper(event):
+            # 'self' is the component instance, captured by the closure.
+            # The user's callback receives the component and the event.
+            callback(self, event)
+        # create_proxy is essential to pass a Python function to a JS event listener
+        return create_proxy(wrapper)
 
 # UI Component Classes (New)
 class Button(Component):
@@ -67,7 +81,7 @@ class Button(Component):
         """
         super().__init__(tag="button")
         if callback:
-            self.node.setAttribute("py-click", callback)
+            self.node.addEventListener("click", self._proxy_event_handler(callback))
         self.set_class(btnClass)
         self.node.setAttribute("type", "button")
         self.node.setAttribute("value", value)
@@ -97,19 +111,19 @@ class Select(Component):
             label_elem.append(document.createTextNode(caption))
             self.node.append(label_elem)
 
-        select_elem = document.createElement("select")
+        self.select_elem = document.createElement("select")
         if callback:
-            select_elem.setAttribute("py-change", callback)
-        select_elem.setAttribute("class", "form-select")
-        select_elem.setAttribute("id", select_id)
+            self.select_elem.addEventListener("change", self._proxy_event_handler(callback))
+        self.select_elem.setAttribute("class", "form-select")
+        self.select_elem.setAttribute("id", select_id)
 
         for l, v in zip(labels, values):
             option_elem = document.createElement("option")
             option_elem.setAttribute("value", str(v))
             option_elem.append(document.createTextNode(str(l)))
-            select_elem.append(option_elem)
+            self.select_elem.append(option_elem)
 
-        self.node.append(select_elem)
+        self.node.append(self.select_elem)
 
 class TextInput(Component):
     """Creates a single-line text input field."""
@@ -133,14 +147,14 @@ class TextInput(Component):
             label_elem.append(document.createTextNode(caption))
             self.node.append(label_elem)
 
-        input_elem = document.createElement("input")
-        input_elem.setAttribute("type", "text")
-        input_elem.setAttribute("class", "form-control")
-        input_elem.setAttribute("id", input_id)
-        input_elem.setAttribute("value", initial_value)
-        if placeholder: input_elem.setAttribute("placeholder", placeholder)
-        if callback: input_elem.setAttribute("py-input", callback)
-        self.node.append(input_elem)
+        self.input_elem = document.createElement("input")
+        self.input_elem.setAttribute("type", "text")
+        self.input_elem.setAttribute("class", "form-control")
+        self.input_elem.setAttribute("id", input_id)
+        self.input_elem.setAttribute("value", initial_value)
+        if placeholder: self.input_elem.setAttribute("placeholder", placeholder)
+        if callback: self.input_elem.addEventListener("input", self._proxy_event_handler(callback))
+        self.node.append(self.input_elem)
 
 class TextArea(Component):
     """Creates a multi-line text input area."""
@@ -165,16 +179,15 @@ class TextArea(Component):
             label_elem.append(document.createTextNode(caption))
             self.node.append(label_elem)
 
-        textarea_elem = document.createElement("textarea")
-        textarea_elem.setAttribute("class", "form-control")
-        textarea_elem.setAttribute("id", textarea_id)
-        textarea_elem.setAttribute("rows", str(rows))
+        self.textarea_elem = document.createElement("textarea")
+        self.textarea_elem.setAttribute("class", "form-control")
+        self.textarea_elem.setAttribute("id", textarea_id)
+        self.textarea_elem.setAttribute("rows", str(rows))
         if placeholder:
-            textarea_elem.setAttribute("placeholder", placeholder)
-        if callback:
-            textarea_elem.setAttribute("py-input", callback)
-        textarea_elem.append(document.createTextNode(initial_value))
-        self.node.append(textarea_elem)
+            self.textarea_elem.setAttribute("placeholder", placeholder)
+        if callback: self.textarea_elem.addEventListener("input", self._proxy_event_handler(callback))
+        self.textarea_elem.append(document.createTextNode(initial_value))
+        self.node.append(self.textarea_elem)
 
 class Checkbox(Component):
     """Creates a checkbox input with a label."""
@@ -190,21 +203,21 @@ class Checkbox(Component):
 
         checkbox_id = f"{self.id}-checkbox"
 
-        input_elem = document.createElement("input")
-        input_elem.setAttribute("class", "form-check-input")
-        input_elem.setAttribute("type", "checkbox")
+        self.input_elem = document.createElement("input")
+        self.input_elem.setAttribute("class", "form-check-input")
+        self.input_elem.setAttribute("type", "checkbox")
         if value is not None:
-            input_elem.setAttribute("value", str(value))
-        input_elem.setAttribute("id", checkbox_id)
+            self.input_elem.setAttribute("value", str(value))
+        self.input_elem.setAttribute("id", checkbox_id)
         if callback:
-            input_elem.setAttribute("py-change", callback)
+            self.input_elem.addEventListener("change", self._proxy_event_handler(callback))
 
         label_elem = document.createElement("label")
         label_elem.setAttribute("class", "form-check-label")
         label_elem.setAttribute("for", checkbox_id)
         label_elem.append(document.createTextNode(label))
 
-        self.node.append(input_elem)
+        self.node.append(self.input_elem)
         self.node.append(label_elem)
 
 class Slider(Component):
@@ -231,16 +244,16 @@ class Slider(Component):
             label_elem.append(document.createTextNode(caption))
             self.node.append(label_elem)
 
-        slider_elem = document.createElement("input")
-        slider_elem.setAttribute("type", "range")
-        slider_elem.setAttribute("class", "form-range")
-        slider_elem.setAttribute("id", slider_id)
-        slider_elem.setAttribute("min", str(min_val))
-        slider_elem.setAttribute("max", str(max_val))
-        slider_elem.setAttribute("step", str(step))
-        slider_elem.setAttribute("value", str(initial_val if initial_val is not None else min_val))
-        if callback: slider_elem.setAttribute("py-change", callback)
-        self.node.append(slider_elem)
+        self.slider_elem = document.createElement("input")
+        self.slider_elem.setAttribute("type", "range")
+        self.slider_elem.setAttribute("class", "form-range")
+        self.slider_elem.setAttribute("id", slider_id)
+        self.slider_elem.setAttribute("min", str(min_val))
+        self.slider_elem.setAttribute("max", str(max_val))
+        self.slider_elem.setAttribute("step", str(step))
+        self.slider_elem.setAttribute("value", str(initial_val if initial_val is not None else min_val))
+        if callback: self.slider_elem.addEventListener("change", self._proxy_event_handler(callback))
+        self.node.append(self.slider_elem)
 
 class RadioGroup(Component):
     """Creates a group of radio buttons where only one can be selected."""
@@ -282,7 +295,7 @@ class RadioGroup(Component):
             if str(v) == str(initial_value):
                 input_elem.setAttribute("checked", True)
             if callback:
-                input_elem.setAttribute("py-change", callback)
+                input_elem.addEventListener("change", self._proxy_event_handler(callback))
 
             label_elem = document.createElement("label")
             label_elem.setAttribute("class", "form-check-label")

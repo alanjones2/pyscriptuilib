@@ -51,8 +51,8 @@ page.add(row1)
 cols = row1.columns
 
 # button callback - the value of the button is the index of the fig
-def cb(event):
-    figcontainer.disp(getBigFig(event.target.value), append=False)
+def cb(button, event):
+    figcontainer.disp(getBigFig(button.node.value), append=False)
 
 # This container will hold the large version of the selected figure
 figcontainer = ui.Container()
@@ -60,7 +60,7 @@ page.add(figcontainer)
 
 for i, x in enumerate(cols):
     x.disp(getFig(str(i)))
-    x.add(ui.Button("Select fig", callback = "cb", value=str(i)))
+    x.add(ui.Button("Select fig", callback=cb, value=str(i)))
 
 # A new container with content types
 
@@ -106,36 +106,36 @@ con1col1, con1col2 = row4.columns
 con1col1.header("Controls")
 con1col2.header("Output")
 
-def selectcb(event):
-    con1col2.disp(f"Select: {event.target.value}", append=False)
-con1col1.add(ui.Select(caption="Select a number", values=[1,2,3], labels=["one","two","three"], callback="selectcb"))
+def selectcb(select_component, event):
+    con1col2.disp(f"Select: {select_component.select_elem.value}", append=False)
+con1col1.add(ui.Select(caption="Select a number", values=[1,2,3], labels=["one","two","three"], callback=selectcb))
 
-def checkcb(event):
-    con1col2.disp(f"Checkbox: {event.target.checked}, Value: {event.target.value}", append=False)
-con1col1.add(ui.Checkbox(value=1, label="Select this for 1", callback="checkcb"))
-con1col1.add(ui.Checkbox(value=2, label="Select this for 2", callback="checkcb"))
+def checkcb(checkbox, event):
+    con1col2.disp(f"Checkbox: {checkbox.input_elem.checked}, Value: {checkbox.input_elem.value}", append=False)
+con1col1.add(ui.Checkbox(value=1, label="Select this for 1", callback=checkcb))
+con1col1.add(ui.Checkbox(value=2, label="Select this for 2", callback=checkcb))
 
-def radiocb(event):
+def radiocb(radio_group, event):
     con1col2.disp(f"Radio: {event.target.value}", append=False)
-con1col1.add(ui.RadioGroup(caption="Choose one letter", values=['A', 'B', 'C'], initial_value='B', callback="radiocb"))
+con1col1.add(ui.RadioGroup(caption="Choose one letter", values=['A', 'B', 'C'], initial_value='B', callback=radiocb))
 
 
-def get_slider_value(event):
-    con1col2.disp(f"Slider: {event.target.value}", append=False)
-con1col2.add(ui.Slider(caption="slider", min_val=0, max_val=100, initial_val=50, step=1, callback="get_slider_value"))
+def get_slider_value(slider, event):
+    con1col2.disp(f"Slider: {slider.slider_elem.value}", append=False)
+con1col1.add(ui.Slider(caption="slider", min_val=0, max_val=100, initial_val=50, step=1, callback=get_slider_value))
 
-def get_input_value(event):
+def get_input_value(text_input, event):
     # This will now update in real-time on every keystroke
-    con1col2.disp(f"Input: {event.target.value}", append=False)
+    con1col2.disp(f"Input: {text_input.input_elem.value}", append=False)
 
-con1col2.add(ui.TextInput(caption="Text Input", placeholder="Type here...", callback="get_input_value"))
+con1col2.add(ui.TextInput(caption="Text Input", placeholder="Type here...", callback=get_input_value))
 
 # Set the style on the output container once to handle newlines correctly
 con1col2.node.style.whiteSpace = "pre-wrap"
-def get_textarea_value(event):
+def get_textarea_value(text_area, event):
     # This will now update in real-time on every keystroke
-    con1col2.disp(f"Text Area content:\n{event.target.value}", append=False)
-con1col2.add(ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4, callback="get_textarea_value"))
+    con1col2.disp(f"Text Area content:\n{text_area.textarea_elem.value}", append=False)
+con1col2.add(ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4, callback=get_textarea_value))
 
 page.writeHTML("---")
 page.add(ui.SmallBanner("Alerts"))
