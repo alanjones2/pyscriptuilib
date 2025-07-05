@@ -32,7 +32,7 @@
 
 from pyscript import document
 from pyscript import display
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Union
 import markdown as md
 
 # The static ID for the main page container, used as the default parent for other containers.
@@ -364,28 +364,18 @@ class SmallBanner(Component):
 
 
 
-# Containers
-
-class Container:
+class Container(Component):
     """A generic container component that acts as a <div> element."""
-    def __init__(self, parent: str = PAGEID, class_name: Optional[str] = None):
+    def __init__(self, class_name: Optional[str] = None):
         """
         Initializes a generic container (a <div> element).
 
         Args:
-            parent (str, optional): The ID of the parent element to append this container to. Defaults to the main page container.
             class_name (str, optional): The CSS class(es) to apply to the container. Defaults to None.
         """
-        self.id = f"pui-id-{id(self)}"
-        self.node = document.createElement("div")
-        self.node.setAttribute("id", self.id)
-        self.class_name = class_name
-        if self.class_name:
-            self.node.setAttribute("class", self.class_name)
-
-        parentNode = document.getElementById(parent)
-        parentNode.append(self.node)
-
+        super().__init__(tag="div")
+        if class_name:
+            self.set_class(class_name)
 
     def add(self, component: 'Component') -> 'Container':
         """Adds a component object to this container and returns self for chaining."""
@@ -429,22 +419,32 @@ class Container:
 
                                             
 class Row(Container):
-    """A specialized container that represents a Bootstrap row, holding columns."""
-    def __init__(self, parent: str = PAGEID, num_cols: int = 1):
+    """A specialized container that represents a Bootstrap row, which holds columns."""
+    def __init__(self, layout: Union[int, List[int]] = 1):
         """
         Args:
-            parent (str, optional): The ID of the parent element. Defaults to the main page container.
-            num_cols (int, optional): The number of columns to create within this row. Defaults to 1.
+            layout (Union[int, List[int]], optional): 
+                - If an int, creates that many equal-width columns.
+                - If a List[int], creates columns with the specified Bootstrap widths (should sum to 12).
+                Defaults to 1.
         """
-        super().__init__(parent=parent, class_name="row")
+        super().__init__(class_name="row")
         self.columns: List['Container'] = []
-        for _ in range(num_cols):
-            # A Column is a simple container with the "col" class, and its parent is this row.
-            col = Container(parent=self.id, class_name="col")
-            self.columns.append(col)
+        if isinstance(layout, int):
+            for _ in range(layout):
+                col = Container(class_name="col")
+                self.add(col)
+                self.columns.append(col)
+        elif isinstance(layout, list):
+            if sum(layout) != 12:
+                print(f"Warning: uilib.Row column widths {layout} do not sum to 12. Layout may be unexpected.")
+            for width in layout:
+                col = Container(class_name=f"col-{width}")
+                self.add(col)
+                self.columns.append(col)
 
 class Page(Container):
-    """A special singleton container that represents the main page content area."""
+    """A special singleton container that represents the main page content area and attaches to the DOM."""
     def __init__(self, titletext: str = "", width: str = "narrow"):
         """
         Initializes the main page container. This class is a singleton; subsequent
@@ -454,22 +454,19 @@ class Page(Container):
             titletext (str, optional): The text to set as the document's <title>. Defaults to "".
             width (str, optional): If "narrow", applies the Bootstrap 'container' class for a centered, max-width layout. Defaults to "narrow".
         """
-        # Page is a singleton container. Check if it already exists.
         page_node = document.getElementById(PAGEID)
 
         if page_node:
-            # If it exists, just adopt the existing node.
+            # If it exists, we can't call an __init__ that creates a new node.
+            # We just need to adopt the existing node.
             self.node = page_node
             self.id = PAGEID
         else:
-            # If it doesn't exist, we can't use super().__init__() because
-            # it appends to a parent. Page appends to the body.
-            # We manually do the setup.
+            # Node doesn't exist, so we create it by calling the parent constructor.
+            super().__init__(class_name="container" if width == "narrow" else None)
             self.id = PAGEID
-            self.node = document.createElement("div")
             self.node.setAttribute("id", self.id)
-            if width == "narrow":
-                self.node.setAttribute("class", "container")
+            
             # Append to the body, which is the special behavior of Page.
             bodyNode = document.getElementsByTagName("body")[0]
             bodyNode.append(self.node)

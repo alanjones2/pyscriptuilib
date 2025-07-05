@@ -41,18 +41,22 @@ def getBigFig(i):
 page = ui.Page(titletext="Kitchen sink")
 
 
-# banner is a convenience function
+
 page.add(ui.Banner("Choose a graph","Select a graph and it will be drawn bigger, below"))
 
-# Create a row with 3 columns and get the list of column containers
-row1 = ui.Row(parent=page.id, num_cols=3)
+
+# Create a row with 3 columns directly inside the page container
+row1 = ui.Row(layout=3)
+page.add(row1)
 cols = row1.columns
 
 # button callback - the value of the button is the index of the fig
 def cb(event):
     figcontainer.disp(getBigFig(event.target.value), append=False)
 
+# This container will hold the large version of the selected figure
 figcontainer = ui.Container()
+page.add(figcontainer)
 
 for i, x in enumerate(cols):
     x.disp(getFig(str(i)))
@@ -62,23 +66,19 @@ for i, x in enumerate(cols):
 
 page.writeHTML("---")
 
-page.add(ui.SmallBanner("Content types"))
 
-#page.header("Content types")
-
-
-my_new_container = ui.Container(parent=page.id)
-
-row2 = ui.Row(parent=my_new_container.id, num_cols=2)
+# This row demonstrates having columns with just headers
+row2 = ui.Row(layout=2)
+page.add(row2)
 my_new_cols = row2.columns
 my_new_col_1 = my_new_cols[0]
 my_new_col_2 = my_new_cols[1]
 my_new_col_1.header("Left column")
 my_new_col_2.header("Right column")
 
-
-con0 = ui.Container()
-row3 = ui.Row(parent=con0.id, num_cols=3)
+# This row demonstrates different header and text types
+row3 = ui.Row(layout=3)
+page.add(row3)
 cols1 = row3.columns
 c1 = cols1[0]
 c2 = cols1[1]
@@ -99,46 +99,65 @@ c2.headertag("header tag level 6",6)
 c3.write("Write some plain text")
 c3.writeHTML("Write text with *markdown text* and <b>HTML text</b>")
 
-con1 = ui.Container()
-row4 = ui.Row(parent=con1.id, num_cols=2)
+# This row demonstrates interactive controls in one column and their output in another.
+row4 = ui.Row(layout=2)
+page.add(row4)
 con1col1, con1col2 = row4.columns
-con2 = ui.Container()
+con1col1.header("Controls")
+con1col2.header("Output")
 
 def selectcb(event):
-    con2.disp(event.target.value)
+    con1col2.disp(f"Select: {event.target.value}", append=False)
 con1col1.add(ui.Select(caption="Select a number", values=[1,2,3], labels=["one","two","three"], callback="selectcb"))
 
 def checkcb(event):
-    con2.disp(f"{event.target.checked} {event.target.value}")
+    con1col2.disp(f"Checkbox: {event.target.checked}, Value: {event.target.value}", append=False)
 con1col1.add(ui.Checkbox(value=1, label="Select this for 1", callback="checkcb"))
 con1col1.add(ui.Checkbox(value=2, label="Select this for 2", callback="checkcb"))
 
 def radiocb(event):
-    con2.disp(f"Radio selected: {event.target.value}")
+    con1col2.disp(f"Radio: {event.target.value}", append=False)
 con1col1.add(ui.RadioGroup(caption="Choose one letter", values=['A', 'B', 'C'], initial_value='B', callback="radiocb"))
 
 
 def get_slider_value(event):
-    con2.disp(f"{event.target.value}", append=False)
+    con1col2.disp(f"Slider: {event.target.value}", append=False)
 con1col2.add(ui.Slider(caption="slider", min_val=0, max_val=100, initial_val=50, step=1, callback="get_slider_value"))
 
 def get_input_value(event):
     # This will now update in real-time on every keystroke
-    con2.disp(f"{event.target.value}", append=False)
+    con1col2.disp(f"Input: {event.target.value}", append=False)
 
 con1col2.add(ui.TextInput(caption="Text Input", placeholder="Type here...", callback="get_input_value"))
 
 # Set the style on the output container once to handle newlines correctly
-con2.node.style.whiteSpace = "pre-wrap"
+con1col2.node.style.whiteSpace = "pre-wrap"
 def get_textarea_value(event):
     # This will now update in real-time on every keystroke
-    con2.disp(f"Text Area content:\n{event.target.value}", append=False)
+    con1col2.disp(f"Text Area content:\n{event.target.value}", append=False)
 con1col2.add(ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4, callback="get_textarea_value"))
 
 page.writeHTML("---")
 page.add(ui.SmallBanner("Alerts"))
 
 alert_container = ui.Container()
+page.add(alert_container)
 alert_container.add(ui.Alert("This is a standard primary alert."))
 alert_container.add(ui.Alert("This is a <strong>danger</strong> alert!", category="danger"))
 alert_container.add(ui.Alert("This is a dismissible success alert. Click the 'x' to close it.", category="success", dismissible=True))
+
+page.writeHTML("---")
+page.add(ui.SmallBanner("Custom Width Rows"))
+
+# This demonstrates a custom row with a 1/3 and 2/3 split (4 + 8 = 12)
+custom_row = ui.Row(layout=[4, 8])
+page.add(custom_row)
+
+col_one_third, col_two_thirds = custom_row.columns
+
+col_one_third.header("One Third")
+col_one_third.write("This column takes up 4 of 12 units.")
+
+col_two_thirds.header("Two Thirds")
+col_two_thirds.write("This column takes up 8 of 12 units.")
+col_two_thirds.add(ui.Alert("This is an alert in the wider column.", category="info"))
