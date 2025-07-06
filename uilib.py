@@ -36,7 +36,7 @@ from pyodide.ffi import create_proxy
 from typing import Any, Callable, List, Optional, Union
 import markdown as md
 
-# The static ID for the main page container, used as the default parent for other containers.
+# The static ID for the main page container.
 PAGEID = "pui-id-page"
 # This registry is crucial to prevent Python from garbage-collecting component
 # objects that are only referenced by JavaScript event listeners.
