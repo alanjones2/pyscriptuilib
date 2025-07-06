@@ -456,8 +456,8 @@ class Container(Component):
     def write(self, text: str, append: bool = True) -> None:
         """Writes plain text to this container."""
         self.disp(text, append)
-    def writeHTML(self, text: str, append: bool = True) -> None:
-        """Writes a string of markdown/HTML to this container."""
+    def writeMarkdown(self, text: str, append: bool = True) -> None:
+        """Writes a string of markdown (which can include HTML) to this container."""
         if append:
             # To avoid destroying existing elements (like plots or elements with listeners),
             # we create a temporary container, add the new HTML to it, and then
@@ -472,7 +472,7 @@ class Container(Component):
             self.node.innerHTML = md.markdown(text)
     def headertag(self, text: str, level: int) -> None:
         """Creates a header tag of a specific level (1-6)."""
-        self.writeHTML(f"<h{level}>{text}</h{level}>")
+        self.writeMarkdown(f"<h{level}>{text}</h{level}>")
     def title(self, text: str) -> None:
         """Creates a main title (<h1>)."""
         self.headertag(text,1)

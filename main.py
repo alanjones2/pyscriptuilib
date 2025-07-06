@@ -74,7 +74,7 @@ def show_headers_and_text():
     c2.headertag("header tag level 6", 6)
 
     c3.write("Write some plain text")
-    c3.writeHTML("Write text with *markdown text* and <b>HTML text</b>")
+    c3.writeMarkdown("Write text with *markdown text* and <b>HTML text</b>")
 
 def show_interactive_controls():
     """Demonstrates all interactive input components."""
@@ -155,13 +155,13 @@ def show_programmatic_access():
 
 # --- Main Application Flow ---
 show_matplotlib_integration()
-page.writeHTML("---")
+page.writeMarkdown("---")
 show_headers_and_text()
-page.writeHTML("---")
+page.writeMarkdown("---")
 show_interactive_controls()
-page.writeHTML("---")
+page.writeMarkdown("---")
 show_alerts()
-page.writeHTML("---")
+page.writeMarkdown("---")
 show_custom_rows()
-page.writeHTML("---")
+page.writeMarkdown("---")
 show_programmatic_access()

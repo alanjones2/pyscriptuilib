@@ -33,13 +33,13 @@ text_col.write(
     "This chart displays the relationship between the total bill and the tip amount "
     "at a restaurant, colored by the gender of the person paying the bill."
 )
-text_col.writeHTML(
+text_col.writeMarkdown(
     "The data is from the <code>tips</code> dataset included with Plotly Express."
 )
 
 # --- 6. Add a footer ---
-page.writeHTML("<hr>") # Use a horizontal rule for separation.
-footer = ui.Container(class_name="text-center text-muted")
+# Use Bootstrap's border and padding utilities for a clean separation.
+footer = ui.Container(class_name="text-center text-muted border-top pt-3 mt-4")
 page.add(footer)
 current_year = datetime.date.today().year
-footer.writeHTML(f"<small>Created by Alan Jones &copy; {current_year}</small>")
+footer.writeMarkdown(f"&copy; {current_year} Alan Jones")
