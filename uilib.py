@@ -125,6 +125,14 @@ class Select(Component):
 
         self.node.append(self.select_elem)
 
+    def get_value(self) -> str:
+        """Returns the value of the currently selected option."""
+        return self.select_elem.value
+
+    def set_value(self, value: Any) -> None:
+        """Sets the selected option based on its value."""
+        self.select_elem.value = str(value)
+
 class TextInput(Component):
     """Creates a single-line text input field."""
     def __init__(self, caption: str = "", initial_value: str = "", placeholder: str = "", callback: Optional[Callable] = None):
@@ -155,6 +163,14 @@ class TextInput(Component):
         if placeholder: self.input_elem.setAttribute("placeholder", placeholder)
         if callback: self.input_elem.addEventListener("input", self._proxy_event_handler(callback))
         self.node.append(self.input_elem)
+
+    def get_value(self) -> str:
+        """Returns the current value of the input field."""
+        return self.input_elem.value
+
+    def set_value(self, value: str) -> None:
+        """Sets the value of the input field."""
+        self.input_elem.value = value
 
 class TextArea(Component):
     """Creates a multi-line text input area."""
@@ -189,6 +205,14 @@ class TextArea(Component):
         self.textarea_elem.append(document.createTextNode(initial_value))
         self.node.append(self.textarea_elem)
 
+    def get_value(self) -> str:
+        """Returns the current content of the text area."""
+        return self.textarea_elem.value
+
+    def set_value(self, value: str) -> None:
+        """Sets the content of the text area."""
+        self.textarea_elem.value = value
+
 class Checkbox(Component):
     """Creates a checkbox input with a label."""
     def __init__(self, label: str = "", callback: Optional[Callable] = None, value: Optional[Any] = None):
@@ -219,6 +243,14 @@ class Checkbox(Component):
 
         self.node.append(self.input_elem)
         self.node.append(label_elem)
+
+    def is_checked(self) -> bool:
+        """Returns True if the checkbox is checked, False otherwise."""
+        return self.input_elem.checked
+
+    def set_checked(self, checked: bool) -> None:
+        """Sets the checked state of the checkbox."""
+        self.input_elem.checked = bool(checked)
 
 class Slider(Component):
     """Creates a slider (range input) control."""
@@ -255,6 +287,14 @@ class Slider(Component):
         if callback: self.slider_elem.addEventListener("change", self._proxy_event_handler(callback))
         self.node.append(self.slider_elem)
 
+    def get_value(self) -> str:
+        """Returns the current value of the slider as a string."""
+        return self.slider_elem.value
+
+    def set_value(self, value: Union[int, float, str]) -> None:
+        """Sets the value of the slider."""
+        self.slider_elem.value = str(value)
+
 class RadioGroup(Component):
     """Creates a group of radio buttons where only one can be selected."""
     def __init__(self, caption: str = "", callback: Optional[Callable] = None, values: List[Any] = [], labels: List[str] = [], initial_value: Optional[Any] = None):
@@ -270,7 +310,7 @@ class RadioGroup(Component):
         self.set_class("mb-3")
 
         # The 'name' attribute must be shared by all radio buttons in the group.
-        group_name = f"{self.id}-radiogroup"
+        self.group_name = f"{self.id}-radiogroup"
 
         if caption:
             legend_elem = document.createElement("legend")
@@ -289,7 +329,7 @@ class RadioGroup(Component):
             input_elem = document.createElement("input")
             input_elem.setAttribute("class", "form-check-input")
             input_elem.setAttribute("type", "radio")
-            input_elem.setAttribute("name", group_name)
+            input_elem.setAttribute("name", self.group_name)
             input_elem.setAttribute("id", radio_id)
             input_elem.setAttribute("value", str(v))
             if str(v) == str(initial_value):
@@ -305,6 +345,19 @@ class RadioGroup(Component):
             wrapper_div.append(input_elem)
             wrapper_div.append(label_elem)
             self.node.append(wrapper_div)
+
+    def get_value(self) -> Optional[str]:
+        """Returns the value of the selected radio button, or None if none are selected."""
+        checked_node = self.node.querySelector(f'input[name="{self.group_name}"]:checked')
+        if checked_node:
+            return checked_node.value
+        return None
+
+    def set_value(self, value: Any) -> None:
+        """Selects the radio button corresponding to the given value."""
+        node_to_check = self.node.querySelector(f'input[name="{self.group_name}"][value="{str(value)}"]')
+        if node_to_check:
+            node_to_check.checked = True
 
 class Alert(Component):
     """Creates a contextual feedback message box."""
