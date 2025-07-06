@@ -447,6 +447,11 @@ class Container(Component):
         """Adds a component object to this container and returns self for chaining."""
         component.add_to(self.node)
         return self # Return self to allow for method chaining
+
+    def clear(self) -> 'Container':
+        """Removes all child elements from this container."""
+        self.node.innerHTML = ""
+        return self # Return self for chaining
     
     # Content functions 
 
