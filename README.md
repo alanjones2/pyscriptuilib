@@ -32,4 +32,4 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 ## Contributing
 
-I am not seeking contributions at this stage
+I am not seeking contributions at this stage but comments are always welcome.
