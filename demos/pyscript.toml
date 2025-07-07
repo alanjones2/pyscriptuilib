@@ -1,0 +1,6 @@
+name = "PyScript UI Library example"
+
+packages = [ "matplotlib","markdown","plotly","pandas"]
+
+[files]
+"../uilib.py" = "./uilib.py"

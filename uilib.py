@@ -87,6 +87,16 @@ class Button(Component):
         self.node.setAttribute("value", value)
         self.node.append(document.createTextNode(caption))
 
+    def get_value(self) -> str:
+        """Returns the value attribute of the button."""
+        return self.node.value
+
+    def set_value(self, value: str) -> None:
+        """Sets the value attribute of the button."""
+        self.node.value = value
+        
+
+
 class Select(Component):
     """Creates a dropdown selection menu."""
     def __init__(self, caption: str = "", callback: Optional[Callable] = None, values: List[Any] = [], labels: List[str] = []):
@@ -161,7 +171,7 @@ class TextInput(Component):
         self.input_elem.setAttribute("id", input_id)
         self.input_elem.setAttribute("value", initial_value)
         if placeholder: self.input_elem.setAttribute("placeholder", placeholder)
-        if callback: self.input_elem.addEventListener("input", self._proxy_event_handler(callback))
+        if callback: self.input_elem.addEventListener("change", self._proxy_event_handler(callback))
         self.node.append(self.input_elem)
 
     def get_value(self) -> str:
@@ -201,7 +211,7 @@ class TextArea(Component):
         self.textarea_elem.setAttribute("rows", str(rows))
         if placeholder:
             self.textarea_elem.setAttribute("placeholder", placeholder)
-        if callback: self.textarea_elem.addEventListener("input", self._proxy_event_handler(callback))
+        if callback: self.textarea_elem.addEventListener("change", self._proxy_event_handler(callback))
         self.textarea_elem.append(document.createTextNode(initial_value))
         self.node.append(self.textarea_elem)
 

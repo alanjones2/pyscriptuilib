@@ -107,9 +107,12 @@ def show_interactive_controls():
         output_col.disp(f"Input: {text_input.get_value()}", append=False)
     controls_col.add(ui.TextInput(caption="Text Input", placeholder="Type here...", callback=get_input_value))
 
-    def get_textarea_value(text_area, event):
+    text_area = ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4)
+    controls_col.add(text_area)
+    def get_textarea_value(button, event):
         output_col.disp(f"Text Area content:\n{text_area.get_value()}", append=False)
-    controls_col.add(ui.TextArea(caption="Multi-line Input", placeholder="Enter a long text...", rows=4, callback=get_textarea_value))
+    text_button = ui.Button("Get text area value", callback=get_textarea_value)
+    controls_col.add(text_button)
 
 def show_alerts():
     """Demonstrates different types of alerts."""
