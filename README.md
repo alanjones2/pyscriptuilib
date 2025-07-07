@@ -24,6 +24,9 @@ You need the following files:
 - ``main.py`` - this is where your Python application code goes.
 - ``pyscript.toml`` - this, amongst other things, is where you must list the Python libraries that you use.
 
+All other files are specific to the repo, demos or experiments and may (should) be deleted for your application. (But feel free to use them if they are useful).
+
+
 You can publish your application to any static web page (e.g. GitHub Pages).
 
 ## License
@@ -32,4 +35,4 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 
 ## Contributing
 
-I am not seeking contributions at this stage but comments are always welcome.
+This is a work in progress. I am not seeking contributions at this stage but comments are always welcome.
