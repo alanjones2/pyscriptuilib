@@ -1,6 +1,7 @@
 import uilib as ui
 import plotly.express as px
 
+
 # --- 1. Create the main page ---
 page = ui.Page(titletext="Interactive Dashboard")
 

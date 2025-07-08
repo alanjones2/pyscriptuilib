@@ -18,6 +18,7 @@ finally:
     sys.stderr = _original_stderr
 # end of warning suppression code
 
+import matplotlib.pyplot as plt
 
 # Make three figures
 
