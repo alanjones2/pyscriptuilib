@@ -559,3 +559,82 @@ class Page(Container):
             titletag = document.createElement("title")
             headNode.append(titletag)
         titletag.innerHTML = titletext
+
+class Modal(Component):
+    """Creates a Bootstrap 5 modal dialog."""
+    def __init__(self, title: str = "", body: str = "", footer: Optional[str] = None, modal_id: Optional[str] = None):
+        """
+        Args:
+            title (str, optional): The title text of the modal. Defaults to "".
+            body (str, optional): The body content (supports markdown). Defaults to "".
+            footer (str, optional): Optional footer content (supports markdown). Defaults to None.
+            modal_id (str, optional): Optional static ID for modal. Defaults to None.
+        """
+        super().__init__(tag="div")
+        self.set_class("modal fade")
+        self.node.setAttribute("tabindex", "-1")
+        self.node.setAttribute("aria-hidden", "true")
+        self.node.setAttribute("role", "dialog")
+
+        if modal_id:
+            self.node.setAttribute("id", modal_id)
+        else:
+            modal_id = self.id
+            self.node.setAttribute("id", modal_id)
+
+        # Modal Dialog
+        dialog = document.createElement("div")
+        dialog.setAttribute("class", "modal-dialog")
+        self.node.append(dialog)
+
+        # Modal Content
+        content = document.createElement("div")
+        content.setAttribute("class", "modal-content")
+        dialog.append(content)
+
+        # Modal Header
+        header = document.createElement("div")
+        header.setAttribute("class", "modal-header")
+        content.append(header)
+
+        title_elem = document.createElement("h5")
+        title_elem.setAttribute("class", "modal-title")
+        title_elem.append(document.createTextNode(title))
+        header.append(title_elem)
+
+        close_button = document.createElement("button")
+        close_button.setAttribute("type", "button")
+        close_button.setAttribute("class", "btn-close")
+        close_button.setAttribute("data-bs-dismiss", "modal")
+        close_button.setAttribute("aria-label", "Close")
+        header.append(close_button)
+
+        # Modal Body
+        body_elem = document.createElement("div")
+        body_elem.setAttribute("class", "modal-body")
+        # Render markdown in body
+        temp = document.createElement("div")
+        temp.innerHTML = md.markdown(body)
+        for child in list(temp.childNodes):
+            body_elem.append(child)
+        content.append(body_elem)
+
+        # Modal Footer (optional)
+        if footer is not None:
+            footer_elem = document.createElement("div")
+            footer_elem.setAttribute("class", "modal-footer")
+            temp_footer = document.createElement("div")
+            temp_footer.innerHTML = md.markdown(footer)
+            for child in list(temp_footer.childNodes):
+                footer_elem.append(child)
+            content.append(footer_elem)
+
+    def show(self):
+        """Shows the modal."""
+        js_modal = __import__("js").bootstrap.Modal.new(self.node)
+        js_modal.show()
+
+    def hide(self):
+        """Hides the modal."""
+        js_modal = __import__("js").bootstrap.Modal.new(self.node)
+        js_modal.hide()
